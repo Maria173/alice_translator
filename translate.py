@@ -30,6 +30,6 @@ def what_lang(text_to_know_lang):
     try:
         response = requests.get(url, params)
         json = response.json()
-        return json['lang'][0]
+        return json['lang']
     except Exception as e:
         return e

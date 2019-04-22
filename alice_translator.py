@@ -1,3 +1,4 @@
+from random import choice
 from flask import Flask, request
 import logging
 import json
@@ -43,7 +44,8 @@ def handle_dialog(res, req):
     if req['session']['new']:
         res['response']['text'] = 'Привет! Назови своё имя!'
         sessionStorage[user_id] = {
-            'first_name': None
+            'first_name': None,
+            'game_started': False
         }
 
         return
@@ -121,6 +123,16 @@ def handle_dialog(res, req):
     elif 'помощь' in f_req:
         res['response']['text'] = help_text
 
+    elif 'давай сыграем в угадывание' in f_req:
+        sessionStorage[user_id]['game_started'] = True
+        res['response']['text'] = '{}! Назови любое слово, а потом попробуй угадать' \
+                                  ' на какой язык я его перевела.'.format(username)
+        sessionStorage[user_id]['attempt'] = 1
+    elif sessionStorage[user_id]['game_started']:
+
+        sessionStorage[user_id]['word'] = f_req
+        play_game(res, req)
+
     else:
         res['response']['text'] = 'Я не понимаю! Попробуй ещё раз!'
         res['response']['buttons'] = [
@@ -139,6 +151,40 @@ def get_first_name(req):
             # Если есть сущность с ключом 'first_name', то возвращаем её значение.
             # Во всех остальных случаях возвращаем None.
             return entity['value'].get('first_name', None)
+
+
+
+def play_game(res, req):
+    global tr_lang
+    user_id = req['session']['user_id']
+    attempt = sessionStorage[user_id]['attempt']
+
+    if attempt == 1:
+        tr_lang = ''
+        tr_word = translate_word(sessionStorage[user_id]['word'], choice(list(langs.values())))
+        abb_lang = what_lang(tr_word)
+        for key, value in langs.items():        # ищем нуюную аббревиатуру в словаре
+            if value == abb_lang:
+                tr_lang = key
+        res['response']['text'] = tr_word
+
+
+
+    elif req['request']['original_utterance'].lower() == tr_lang:
+                res['response']['text'] = 'Молодец, {}! Правильно!'.format(username)
+                sessionStorage[user_id]['game_started'] = False
+                return
+    else:
+            if attempt == 4:
+                res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}. Сыграем ещё?'
+                sessionStorage[user_id]['game_started'] = False
+                return
+            else:
+                 res['response']['text'] = '{}, попробуй ещё раз!'.format(username)
+    sessionStorage[user_id]['attempt'] += 1
+
+
+
 
 
 if __name__ == '__main__':
