@@ -202,16 +202,13 @@ def get_first_name(req):
 def play_game_gess_lang(res, req):
     global tr_lang
     user_id = req['session']['user_id']
+    word = sessionStorage[user_id]['word']
     attempt = sessionStorage[user_id]['attempt']
 
-    if attempt == 1:
-        tr_lang = ''
-        tr_word = translate_word(sessionStorage[user_id]['word'], choice(list(langs.values())))
-        abb_lang = what_lang(tr_word)
-        for key, value in langs.items():        # ищем нуюную аббревиатуру в словаре
-            if value == abb_lang:
-                tr_lang = key
-        res['response']['text'] = tr_word
+    if attempt == 1: # м
+        tr_lang = choice(list(langs.keys())) # м
+        tr_word = translate_word(word, langs[tr_lang]) # м
+        res['response']['text'] = tr_word # м
 
 
 
@@ -221,7 +218,7 @@ def play_game_gess_lang(res, req):
                 return
     else:
             if attempt == 4:
-                res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}.'
+                res['response']['text'] = 'Вы пытались. Это {}.'.format(tr_lang)
                 sessionStorage[user_id]['game_started1'] = False
                 return
             else:
