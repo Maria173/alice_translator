@@ -49,7 +49,9 @@ def handle_dialog(res, req):
         res['response']['text'] = 'Привет! Назови своё имя!'
         sessionStorage[user_id] = {
             'first_name': None,
-            'game_started': False
+            'game_started1': False,
+            'game_started2': False,
+            'lang': None
         }
 
         return
@@ -69,6 +71,14 @@ def handle_dialog(res, req):
             res['response']['buttons'] = [
                 {
                     'title': 'Помощь',
+                    'hide': True
+                },
+                {
+                    'title': 'Давай сыграем в угадай язык',
+                    'hide': True
+                },
+                {
+                    'title': 'Давай проверим языкознание',
                     'hide': True
                 }
             ]
@@ -101,11 +111,19 @@ def handle_dialog(res, req):
             req_lang = langs[text_lang]             # нужный язык в аббревиатуре
             res['response']['text'] = translate_word(text_to_translate, req_lang).capitalize()
             res['response']['buttons'] = [
-                    {
-                        'title': 'Помощь',
-                        'hide': True
-                    }
-                ]
+                {
+                    'title': 'Помощь',
+                    'hide': True
+                },
+                {
+                    'title': 'Давай сыграем в угадай язык',
+                    'hide': True
+                },
+                {
+                    'title': 'Давай проверим языкознание',
+                    'hide': True
+                }
+            ]
 
         elif 'на каком языке' in f_req or 'что за язык' in f_req:
             words = f_req.split()
@@ -123,16 +141,32 @@ def handle_dialog(res, req):
                 if value == abb_lang:
                     res['response']['text'] = key.title()
                     res['response']['buttons'] = [
-                    {
-                        'title': 'Помощь',
-                        'hide': True
-                    }
-                ]
+                        {
+                            'title': 'Помощь',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
 
         elif 'помощь' in f_req:
             res['response']['text'] = help_text
-
-
+            res['response']['buttons'] = [
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
 
         elif 'давай проверим языкознание' in f_req:
             sessionStorage[user_id]['game_started2'] = True
@@ -143,28 +177,64 @@ def handle_dialog(res, req):
         elif sessionStorage[user_id]['game_started2'] and (f_req in langs.keys()):
             sessionStorage[user_id]['lang'] = f_req
             res['response']['text'] = 'Продолжаем?'
+            res['response']['buttons'] = [
+                {
+                    'title': 'Да',
+                    'hide': True
+                },
+                {
+                    'title': 'Нет',
+                    'hide': True
+                }
+            ]
 
-        elif sessionStorage[user_id]['game_started2'] and (sessionStorage[user_id]['lang'] == False) and (f_req not in langs.keys()):
+        elif sessionStorage[user_id]['game_started2'] and (sessionStorage[user_id]['lang'] is False) and (f_req not in langs.keys()):
             res['response']['text'] = 'Извини, но я не знаю такой язык. Попробуй ещё раз!'
 
         elif sessionStorage[user_id]['game_started2'] and sessionStorage[user_id]['lang'] and f_req in ['нет', 'стоп']:
             sessionStorage[user_id]['lang'] = False
             sessionStorage[user_id]['game_started2'] = False
             res['response']['text'] = 'Нет, так нет!'
+            res['response']['buttons'] = [
+                        {
+                            'title': 'Помощь',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
 
         elif sessionStorage[user_id]['game_started2'] and sessionStorage[user_id]['lang']:
-            play_game_knowlage(res, req)
+            play_game_knowledge(res, req)
 
-        elif sessionStorage[user_id]['game_started2'] == False and sessionStorage[user_id]['lang'] and f_req in ['да', 'продолжаем']:
+        elif sessionStorage[user_id]['game_started2'] is False and sessionStorage[user_id]['lang'] and f_req in ['да', 'продолжаем']:
             sessionStorage[user_id]['game_started2'] = True
             sessionStorage[user_id]['time'] = 1
-            play_game_knowlage(res, req)
+            play_game_knowledge(res, req)
 
-        elif sessionStorage[user_id]['game_started2'] == False and sessionStorage[user_id]['lang'] and f_req in ['нет', 'стоп']:
+        elif sessionStorage[user_id]['game_started2'] is False and sessionStorage[user_id]['lang'] and f_req in ['нет', 'стоп']:
             sessionStorage[user_id]['lang'] = False
             res['response']['text'] = 'Как скажешь!'
-
-
+            res['response']['buttons'] = [
+                        {
+                            'title': 'Помощь',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
 
         elif 'давай сыграем в угадай язык' in f_req:
             sessionStorage[user_id]['game_started1'] = True
@@ -175,9 +245,7 @@ def handle_dialog(res, req):
         elif sessionStorage[user_id]['game_started1']:
 
             sessionStorage[user_id]['word'] = f_req
-            play_game_gess_lang(res, req)
-
-
+            play_game_guess_lang(res, req)
 
         else:
             res['response']['text'] = 'Я не понимаю! Попробуй ещё раз!'
@@ -199,53 +267,136 @@ def get_first_name(req):
             return entity['value'].get('first_name', None)
 
 
-def play_game_gess_lang(res, req):
-    global tr_lang
+def play_game_guess_lang(res, req):
+    global tr_lang, tip1, tip2, tip3, tr_word
     user_id = req['session']['user_id']
     word = sessionStorage[user_id]['word']
     attempt = sessionStorage[user_id]['attempt']
 
-    if attempt == 1: # м
-        tr_lang = choice(list(langs.keys())) # м
-        tr_word = translate_word(word, langs[tr_lang]) # м
-        res['response']['text'] = tr_word # м
-
-
+    if attempt == 1:
+        tr_lang = choice(list(langs.keys()))
+        tr_word = translate_word(sessionStorage[user_id]['word'], langs[tr_lang])
+        tip1 = choice(list(langs.keys()))
+        tip2 = tr_lang
+        tip3 = choice(list(langs.keys()))
+        res['response']['text'] = tr_word
+        res['response']['buttons'] = [
+                    {
+                        'title': tip1,
+                        'hide': True
+                    },
+                    {
+                        'title': tip2,
+                        'hide': True
+                    },
+                    {
+                        'title': tip3,
+                        'hide': True
+                    }
+                ]
+        sessionStorage[user_id]['attempt'] += 1
+        return
 
     elif req['request']['original_utterance'].lower() == tr_lang:
                 res['response']['text'] = 'Молодец, {}! Правильно!'.format(username)
                 sessionStorage[user_id]['game_started1'] = False
+                res['response']['buttons'] = [
+                        {
+                            'title': 'Помощь',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
                 return
     else:
-            if attempt == 4:
-                res['response']['text'] = 'Вы пытались. Это {}.'.format(tr_lang)
+
+            if attempt == 3:
+                res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}.' \
+                                                                    f'А слово переводится так: {tr_word}.'
+                res['response']['buttons'] = [
+                        {
+                            'title': 'Помощь',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай сыграем в угадай язык',
+                            'hide': True
+                        },
+                        {
+                            'title': 'Давай проверим языкознание',
+                            'hide': True
+                        }
+                    ]
+
                 sessionStorage[user_id]['game_started1'] = False
                 return
             else:
-                 res['response']['text'] = '{}, попробуй ещё раз!'.format(username)
+                res['response']['text'] = '{}, попробуй ещё раз!'.format(username)
+                res['response']['buttons'] = [
+                    {
+                        'title': tip1,
+                        'hide': True
+                    },
+                    {
+                        'title': tip2,
+                        'hide': True
+                    },
+                    {
+                        'title': tip3,
+                        'hide': True
+                    }
+                ]
 
     sessionStorage[user_id]['attempt'] += 1
 
 
-def play_game_knowlage(res, req):
-    global frase
+def play_game_knowledge(res, req):
+    global phrase
     user_id = req['session']['user_id']
     time = sessionStorage[user_id]['time']
     tr_lang = sessionStorage[user_id]['lang']
 
     if time == 1:
-        frase = choice(frases)
-        tr_text = translate_word(frase, langs[tr_lang])
+        phrase = choice(frases)
+        tr_text = translate_word(phrase, langs[tr_lang])
         res['response']['text'] = tr_text
 
-    elif time == 2 and req['request']['original_utterance'].lower() == frase:
+    elif time == 2 and req['request']['original_utterance'].lower() == phrase:
             res['response']['text'] = 'Молодец, {}! Правильно! Продолжаем?'.format(username)
+            res['response']['buttons'] = [
+                {
+                    'title': 'Да',
+                    'hide': True
+                },
+                {
+                    'title': 'Нет',
+                    'hide': True
+                }
+            ]
+
             sessionStorage[user_id]['game_started2'] = False
             return
 
     else:
 
-        res['response']['text'] = 'Нет! Это переводится так: {}. Продолжаем?'.format(frase)
+        res['response']['text'] = 'Нет! Это переводится так: {}. Продолжаем?'.format(phrase)
+        res['response']['buttons'] = [
+                {
+                    'title': 'Да',
+                    'hide': True
+                },
+                {
+                    'title': 'Нет',
+                    'hide': True
+                }
+            ]
         sessionStorage[user_id]['game_started2'] = False
 
     sessionStorage[user_id]['time'] += 1
