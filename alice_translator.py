@@ -1,9 +1,9 @@
-from random import choice
+from random import choice, shuffle
 from flask import Flask, request
 import logging
 import json
 from translate import translate_word, what_lang
-from dictionary import frases
+from dictionary import phrases
 
 from langs import langs
 
@@ -253,6 +253,14 @@ def handle_dialog(res, req):
                     {
                         'title': 'Помощь',
                         'hide': True
+                    },
+                    {
+                        'title': 'Давай сыграем в угадай язык',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Давай проверим языкознание',
+                        'hide': True
                     }
                 ]
 
@@ -270,15 +278,16 @@ def get_first_name(req):
 def play_game_guess_lang(res, req):
     global tr_lang, tip1, tip2, tip3, tr_word
     user_id = req['session']['user_id']
-    word = sessionStorage[user_id]['word']
     attempt = sessionStorage[user_id]['attempt']
 
     if attempt == 1:
         tr_lang = choice(list(langs.keys()))
         tr_word = translate_word(sessionStorage[user_id]['word'], langs[tr_lang])
-        tip1 = choice(list(langs.keys()))
-        tip2 = tr_lang
-        tip3 = choice(list(langs.keys()))
+        tips = [choice(list(langs.keys())), choice(list(langs.keys())), tr_lang]
+        shuffle(tips)
+        tip1 = tips[0]
+        tip2 = tips[1]
+        tip3 = tips[2]
         res['response']['text'] = tr_word
         res['response']['buttons'] = [
                     {
@@ -318,8 +327,9 @@ def play_game_guess_lang(res, req):
     else:
 
             if attempt == 3:
+                right_word = translate_word(tr_word,'ru')
                 res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}.' \
-                                                                    f'А слово переводится так: {tr_word}.'
+                                                                    f'А слово переводится так: {right_word}.'
                 res['response']['buttons'] = [
                         {
                             'title': 'Помощь',
@@ -364,7 +374,7 @@ def play_game_knowledge(res, req):
     tr_lang = sessionStorage[user_id]['lang']
 
     if time == 1:
-        phrase = choice(frases)
+        phrase = choice(phrases)
         tr_text = translate_word(phrase, langs[tr_lang])
         res['response']['text'] = tr_text
 
