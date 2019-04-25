@@ -162,7 +162,7 @@ def handle_dialog(res, req):
                         }
                     ]
 
-        elif 'помощь' in f_req:
+        elif 'помощь' in f_req or 'что ты умеешь' in f_req:
             res['response']['text'] = help_text
             res['response']['buttons'] = [
                         {
