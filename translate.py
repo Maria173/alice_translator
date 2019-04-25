@@ -1,6 +1,7 @@
 import requests
 
-
+# Переведено сервисом «Яндекс.Переводчик» http://translate.yandex.ru/
+# возвращает текст, переведенный на указанный язык
 def translate_word(text_to_translate, req_lang):
     url = "https://translate.yandex.net/api/v1.5/tr.json/translate"
 
@@ -19,6 +20,7 @@ def translate_word(text_to_translate, req_lang):
         return e
 
 
+# возвращает язык, на котором написан текст
 def what_lang(text_to_know_lang):
     url = "https://translate.yandex.net/api/v1.5/tr.json/detect"
 

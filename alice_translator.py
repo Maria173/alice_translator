@@ -4,7 +4,6 @@ import logging
 import json
 from translate import translate_word, what_lang
 from dictionary import phrases
-
 from langs import langs
 
 app = Flask(__name__)
@@ -12,6 +11,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO, filename='alice_translator.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 sessionStorage = {}
+
 help_text = 'Привет! Я могу перевести текст с любого языка на русский язык. Для ' \
             ' этого нужно сказать "Переведи (текст) на (язык)". Я могу сказать на каком языке ' \
             ' написан текст. Просто скажите "На каком языке (текст)" или "Что за язык (текст)". ' \
@@ -22,6 +22,7 @@ help_text = 'Привет! Я могу перевести текст с любо
             '(Для этого скажите "Давай проверим языкознание").'
 
 
+# формирует запрос для Алисы и ответ для пользоателя
 @app.route('/post', methods=['POST'])
 def main():
     logging.info('Request: %r', request.json)
@@ -41,6 +42,7 @@ def main():
     return json.dumps(response)
 
 
+# обрабатывает диалог с Алисой
 def handle_dialog(res, req):
     user_id = req['session']['user_id']
     global username
@@ -96,11 +98,13 @@ def handle_dialog(res, req):
                 del words[0]
 
             if words[-1] == 'язык':
-                text_lang = words[-2]               # нужный язык на русском языке
+                # нужный язык на русском языке
+                text_lang = words[-2]
+                # текст для перевода
                 text_to_translate = ''
                 for i in range(1, len(words) - 3):
                     new = words[i] + ' '
-                    text_to_translate += new        # текст для перевода
+                    text_to_translate += new
             else:
                 text_lang = words[-1]
                 text_to_translate = ''
@@ -108,7 +112,8 @@ def handle_dialog(res, req):
                     new = words[i] + ' '
                     text_to_translate += new
 
-            req_lang = langs[text_lang]             # нужный язык в аббревиатуре
+            # нужный язык в аббревиатуре
+            req_lang = langs[text_lang]
             res['response']['text'] = translate_word(text_to_translate, req_lang).capitalize()
             res['response']['buttons'] = [
                 {
@@ -131,13 +136,15 @@ def handle_dialog(res, req):
             if 'привет' in words[0]:
                 del words[0]
 
+            # текст для определения языка
             text_to_know_lang = ''
             for i in range(3, len(words)):
                 new = words[i] + ' '
-                text_to_know_lang += new            # текст для определения языка
+                text_to_know_lang += new
 
             abb_lang = what_lang(text_to_know_lang)
-            for key, value in langs.items():        # ищем нуюную аббревиатуру в словаре
+            # ищем нуюную аббревиатуру в словаре
+            for key, value in langs.items():
                 if value == abb_lang:
                     res['response']['text'] = key.title()
                     res['response']['buttons'] = [
@@ -275,12 +282,14 @@ def get_first_name(req):
             return entity['value'].get('first_name', None)
 
 
+# обработчик игры «Угадай язык»
 def play_game_guess_lang(res, req):
     global tr_lang, tip1, tip2, tip3, tr_word
     user_id = req['session']['user_id']
     attempt = sessionStorage[user_id]['attempt']
 
     if attempt == 1:
+        # возвращаем переведенное слово и 3 варианта ответа
         tr_lang = choice(list(langs.keys()))
         tr_word = translate_word(sessionStorage[user_id]['word'], langs[tr_lang])
         tips = [choice(list(langs.keys())), choice(list(langs.keys())), tr_lang]
@@ -367,6 +376,7 @@ def play_game_guess_lang(res, req):
     sessionStorage[user_id]['attempt'] += 1
 
 
+# обработчик игры «Проверь языкознание»
 def play_game_knowledge(res, req):
     global phrase
     user_id = req['session']['user_id']
@@ -374,6 +384,7 @@ def play_game_knowledge(res, req):
     tr_lang = sessionStorage[user_id]['lang']
 
     if time == 1:
+        # возвращаем слово из списка, переведенное на нужный язык
         phrase = choice(phrases)
         tr_text = translate_word(phrase, langs[tr_lang])
         res['response']['text'] = tr_text
