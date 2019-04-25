@@ -117,6 +117,11 @@ def handle_dialog(res, req):
             res['response']['text'] = translate_word(text_to_translate, req_lang).capitalize()
             res['response']['buttons'] = [
                 {
+                    "title": "Переведено сервисом «Яндекс.Переводчик»",
+                    "url": "http://translate.yandex.ru/",
+                    "hide": False
+                },
+                {
                     'title': 'Помощь',
                     'hide': True
                 },
@@ -299,6 +304,12 @@ def play_game_guess_lang(res, req):
         tip3 = tips[2]
         res['response']['text'] = tr_word
         res['response']['buttons'] = [
+
+                    {
+                        "title": "Переведено сервисом «Яндекс.Переводчик»",
+                        "url": "http://translate.yandex.ru/",
+                        "hide": False
+                    },
                     {
                         'title': tip1,
                         'hide': True
@@ -337,8 +348,8 @@ def play_game_guess_lang(res, req):
 
             if attempt == 3:
                 right_word = translate_word(tr_word,'ru')
-                res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}.' \
-                                                                    f'А слово переводится так: {right_word}.'
+                res['response']['text'] = res['response']['text'] = f'Вы пытались. Это {tr_lang}.'
+
                 res['response']['buttons'] = [
                         {
                             'title': 'Помощь',
