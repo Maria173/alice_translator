@@ -12,9 +12,14 @@ logging.basicConfig(level=logging.INFO, filename='alice_translator.log',
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 sessionStorage = {}
 
-help_text = 'Привет! Я могу: 1)перевести текст; ' \
-            '2)сказать, на каком языке он написан; ' \
-            '3)поиграть с тобой в языковые игры!'
+help_text = 'В этом навыке я могу перевести текст с любого языка на русский язык. Для ' \
+            ' этого нужно сказать "Переведи (текст) на (язык)". Я могу сказать на каком языке ' \
+            ' написан текст. Просто скажите "На каком языке (текст)" или "Что за язык (текст)". ' \
+            ' Если вам скучно, то мы можем сыграть в игру, где я перевожу ваше ' \
+            ' слово на случайный язык, а вы пытаетесь отгадать, что за язык. ' \
+            ' (Для активации игры скажите "Давай сыграем в угадай язык"). ' \
+            'Также вы можете проверить свои познания в каком-либо языке. ' \
+            '(Для этого скажите "Давай проверим языкознание").'
 
 
 # формирует запрос для Алисы и ответ для пользоателя
@@ -43,11 +48,11 @@ def handle_dialog(res, req):
     global username
 
     if req['session']['new']:
-        res['response']['text'] = 'Привет! Я могу перевести текст с любого языка на русский язык. Для ' \
+        res['response']['text'] = 'В этом навыке я могу перевести текст с любого языка на русский язык. Для ' \
             ' этого нужно сказать "Переведи (текст) на (язык)". Я могу сказать на каком языке ' \
             ' написан текст. Просто скажите "На каком языке (текст)" или "Что за язык (текст)". ' \
             ' Если вам скучно, то мы можем сыграть в игру, где я перевожу ваше ' \
-            ' слово на случайный язык, а вы пытаетесь отгадать что за язык. ' \
+            ' слово на случайный язык, а вы пытаетесь отгадать, что за язык. ' \
             ' (Для активации игры скажите "Давай сыграем в угадай язык"). ' \
             'Также вы можете проверить свои познания в каком-либо языке. ' \
             '(Для этого скажите "Давай проверим языкознание").' \
@@ -100,43 +105,59 @@ def handle_dialog(res, req):
             if 'привет' in words[0]:
                 del words[0]
 
-            if words[-1] == 'язык':
-                # нужный язык на русском языке
-                text_lang = words[-2]
-                # текст для перевода
-                text_to_translate = ''
-                for i in range(1, len(words) - 3):
-                    new = words[i] + ' '
-                    text_to_translate += new
-            else:
+            # if words[-1] == 'язык':
+            #     # нужный язык на русском языке
+            #     text_lang = words[-2]
+            #     # текст для перевода
+            #     text_to_translate = ''
+            #     for i in range(1, len(words) - 3):
+            #         new = words[i] + ' '
+            #         text_to_translate += new
+            if words[-1] in langs.keys():
                 text_lang = words[-1]
                 text_to_translate = ''
                 for i in range(1, len(words) - 2):
                     new = words[i] + ' '
                     text_to_translate += new
 
-            # нужный язык в аббревиатуре
-            req_lang = langs[text_lang]
-            res['response']['text'] = translate_word(text_to_translate, req_lang).capitalize()
-            res['response']['buttons'] = [
-                {
-                    "title": "Переведено сервисом «Яндекс.Переводчик»",
-                    "url": "http://translate.yandex.ru/",
-                    "hide": False
-                },
-                {
-                    'title': 'Помощь',
-                    'hide': True
-                },
-                {
-                    'title': 'Давай сыграем в угадай язык',
-                    'hide': True
-                },
-                {
-                    'title': 'Давай проверим языкознание',
-                    'hide': True
-                }
-            ]
+                # нужный язык в аббревиатуре
+                req_lang = langs[text_lang]
+                res['response']['text'] = translate_word(text_to_translate, req_lang).capitalize()
+                res['response']['buttons'] = [
+                    {
+                        "title": "Переведено сервисом «Яндекс.Переводчик»",
+                        "url": "http://translate.yandex.ru/",
+                        "hide": False
+                    },
+                    {
+                        'title': 'Помощь',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Давай сыграем в угадай язык',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Давай проверим языкознание',
+                        'hide': True
+                    }
+                ]
+            else:
+                res['response']['text'] = 'Я не понимаю! Попробуй ещё раз!'
+                res['response']['buttons'] = [
+                    {
+                        'title': 'Помощь',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Давай сыграем в угадай язык',
+                        'hide': True
+                    },
+                    {
+                        'title': 'Давай проверим языкознание',
+                        'hide': True
+                    }
+                ]
 
         elif 'на каком языке' in f_req or 'что за язык' in f_req:
             words = f_req.split()
